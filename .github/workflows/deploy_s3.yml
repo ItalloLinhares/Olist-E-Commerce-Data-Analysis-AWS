@@ -1,0 +1,33 @@
+name: Deploy to AWS S3
+
+on:
+  push:
+    branches:
+      - main  # Executa sempre que houver push na branch main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout do Código
+      uses: actions/checkout@v3
+
+    - name: Criar Arquivo ZIP
+      run: |
+        # Zipa o arquivo .py e a pasta Validations mantendo a estrutura correta
+        # -r: recursivo (para pastas)
+        zip -r libs_olist.zip validate_customers.py Validations/
+
+    - name: Configurar Credenciais AWS
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: sa-east-1 # Mude para sua região (ex: us-east-1)
+
+    - name: Upload para o S3
+      run: |
+        # Copia o zip criado para o bucket
+        # Mude o nome do bucket abaixo
+        aws s3 cp libs_olist.zip s3://il-datalake-olist/scripts/libs/libs_olist.zip
