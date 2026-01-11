@@ -3,7 +3,9 @@ name: Deploy to AWS S3
 on:
   push:
     branches:
-      - main  # Executa sempre que houver push na branch main
+      - main
+    paths:
+      - 'Olist - AWS/**'
 
 jobs:
   deploy:
@@ -15,19 +17,27 @@ jobs:
 
     - name: Criar Arquivo ZIP
       run: |
-        # Zipa o arquivo .py e a pasta Validations mantendo a estrutura correta
-        # -r: recursivo (para pastas)
-        zip -r libs_olist.zip validate_customers.py Validations/
+        # 1. Entra na pasta específica (Use aspas por causa dos espaços)
+        cd "Olist - AWS"
+
+        # 2. Compacta tudo (.) recursivamente (-r)
+        # O "../libs_olist.zip" diz para salvar o arquivo zip um nível acima (na raiz)
+        # Isso evita que o zip fique preso dentro da pasta que estamos
+        zip -r ../libs_olist.zip . -x "*.git*"
+
+        # 3. (Debug) Volta para raiz e mostra o conteúdo do zip para você conferir
+        cd ..
+        echo "--- CONTEUDO DO ARQUIVO ZIP ---"
+        unzip -l libs_olist.zip
 
     - name: Configurar Credenciais AWS
       uses: aws-actions/configure-aws-credentials@v2
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: sa-east-1 # Mude para sua região (ex: us-east-1)
+        aws-region: sa-east-1
 
     - name: Upload para o S3
       run: |
-        # Copia o zip criado para o bucket
-        # Mude o nome do bucket abaixo
+        # O zip foi salvo na raiz no passo anterior, então o caminho é simples
         aws s3 cp libs_olist.zip s3://il-datalake-olist/scripts/libs/libs_olist.zip
