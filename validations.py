@@ -393,7 +393,3 @@ def show_results(review_coluna, total_linhas, total_validos, total_invalidos, pe
     print(f"="*5 + f"RESULTADOS PARA A COLUNA {review_coluna.upper()}" + f"="*5)
     print(f"Linhas Válidas da Coluna {review_coluna} no dataframe: {total_validos} de {total_linhas} ({percentual_validos:.2f}%)")
     print(f"Linhas Inválidas da Coluna {review_coluna} no dataframe: {total_invalidos} de {total_linhas} ({percentual_invalidos:.2f}%) \n")
-
-
-def test():
-    return null
