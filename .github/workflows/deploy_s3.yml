@@ -1,9 +1,53 @@
+# name: Deploy to AWS S3
+
+# on:
+#   push:
+#     branches:
+#       - main
+
+# jobs:
+#   deploy:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#     - name: Checkout do Código
+#       uses: actions/checkout@v3
+
+#     - name: Criar Arquivo ZIP
+#       run: |
+#         # 1. Entra na pasta específica (Use aspas por causa dos espaços)
+#         cd "Olist - AWS"
+
+#         # 2. Compacta tudo (.) recursivamente (-r)
+#         # O "../libs_olist.zip" diz para salvar o arquivo zip um nível acima (na raiz)
+#         # Isso evita que o zip fique preso dentro da pasta que estamos
+#         zip -r ../libs_olist.zip . -x "*.git*"
+
+#         # 3. (Debug) Volta para raiz e mostra o conteúdo do zip para você conferir
+#         cd ..
+#         echo "--- CONTEUDO DO ARQUIVO ZIP ---"
+#         unzip -l libs_olist.zip
+
+#     - name: Configurar Credenciais AWS
+#       uses: aws-actions/configure-aws-credentials@v2
+#       with:
+#         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#         aws-region: sa-east-1
+
+#     - name: Upload para o S3
+#       run: |
+#         # O zip foi salvo na raiz no passo anterior, então o caminho é simples
+#         aws s3 cp libs_olist.zip s3://il-datalake-olist/scripts/libs/libs_olist.zip
+
+
 name: Deploy to AWS S3
 
 on:
   push:
     branches:
       - main
+      - master # Adicionei por garantia
 
 jobs:
   deploy:
@@ -13,20 +57,25 @@ jobs:
     - name: Checkout do Código
       uses: actions/checkout@v3
 
+    # --- PASSO DETETIVE: VAMOS DESCOBRIR A ESTRUTURA REAL ---
+    - name: Listar Arquivos (Debug)
+      run: |
+        echo "=== ARQUIVOS NA RAIZ ==="
+        ls -la
+        
+        echo "=== PROCURANDO O ARQUIVO PYTHON ==="
+        # Isso vai encontrar onde o arquivo está, não importa a pasta
+        find . -name "validate_customers.py"
+    # --------------------------------------------------------
+
     - name: Criar Arquivo ZIP
       run: |
-        # 1. Entra na pasta específica (Use aspas por causa dos espaços)
-        cd "Olist - AWS"
-
-        # 2. Compacta tudo (.) recursivamente (-r)
-        # O "../libs_olist.zip" diz para salvar o arquivo zip um nível acima (na raiz)
-        # Isso evita que o zip fique preso dentro da pasta que estamos
+        # Tenta entrar na pasta (se falhar, o script continua para vermos o erro)
+        cd "Olist - AWS" || echo "❌ AVISO: Não consegui entrar na pasta 'Olist - AWS'"
+        
+        # Se o cd falhou, o zip vai tentar zipar a raiz.
+        # Se o cd funcionou, vai zipar o conteudo da pasta.
         zip -r ../libs_olist.zip . -x "*.git*"
-
-        # 3. (Debug) Volta para raiz e mostra o conteúdo do zip para você conferir
-        cd ..
-        echo "--- CONTEUDO DO ARQUIVO ZIP ---"
-        unzip -l libs_olist.zip
 
     - name: Configurar Credenciais AWS
       uses: aws-actions/configure-aws-credentials@v2
@@ -37,5 +86,4 @@ jobs:
 
     - name: Upload para o S3
       run: |
-        # O zip foi salvo na raiz no passo anterior, então o caminho é simples
         aws s3 cp libs_olist.zip s3://il-datalake-olist/scripts/libs/libs_olist.zip
