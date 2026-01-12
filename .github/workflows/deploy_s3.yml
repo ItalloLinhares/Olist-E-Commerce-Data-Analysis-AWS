@@ -68,14 +68,29 @@ jobs:
         find . -name "validate_customers.py"
     # --------------------------------------------------------
 
-    - name: Criar Arquivo ZIP
+    - name: Criar Arquivo ZIP (Modo Automático)
       run: |
-        # Tenta entrar na pasta (se falhar, o script continua para vermos o erro)
-        cd "Olist - AWS" || echo "❌ AVISO: Não consegui entrar na pasta 'Olist - AWS'"
+        # 1. Procura onde está o arquivo principal (ignora pastas ocultas)
+        # O comando find varre o projeto inteiro atrás do arquivo
+        CAMINHO_ARQUIVO=$(find . -name "validate_customers.py" -not -path '*/.*' -print -quit)
         
-        # Se o cd falhou, o zip vai tentar zipar a raiz.
-        # Se o cd funcionou, vai zipar o conteudo da pasta.
-        zip -r ../libs_olist.zip . -x "*.git*"
+        if [ -z "$CAMINHO_ARQUIVO" ]; then
+          echo "❌ ERRO CRÍTICO: O arquivo validate_customers.py não foi encontrado no repositório!"
+          exit 1
+        fi
+        
+        # 2. Pega apenas o nome da pasta onde o arquivo está
+        PASTA_ALVO=$(dirname "$CAMINHO_ARQUIVO")
+        echo "✅ Arquivo encontrado na pasta: '$PASTA_ALVO'. Entrando lá..."
+        
+        # 3. Entra na pasta (seja ela qual for)
+        cd "$PASTA_ALVO"
+        
+        # 4. Cria o zip e salva na raiz do workspace do GitHub ($GITHUB_WORKSPACE)
+        # Assim o próximo passo (Upload) vai achar o arquivo fácil
+        zip -r $GITHUB_WORKSPACE/libs_olist.zip . -x "*.git*"
+        
+        echo "✅ Zip criado com sucesso na raiz."
 
     - name: Configurar Credenciais AWS
       uses: aws-actions/configure-aws-credentials@v2
@@ -86,4 +101,9 @@ jobs:
 
     - name: Upload para o S3
       run: |
-        aws s3 cp libs_olist.zip s3://il-datalake-olist/scripts/libs/libs_olist.zip
+        echo "--- VERIFICANDO SE O ARQUIVO EXISTE ---"
+        ls -la $GITHUB_WORKSPACE/libs_olist.zip
+        
+        echo "--- ENVIANDO PARA O S3 ---"
+        # Usamos o caminho completo ($GITHUB_WORKSPACE/...) para não ter erro de "file not found"
+        aws s3 cp $GITHUB_WORKSPACE/libs_olist.zip s3://il-datalake-olist/scripts/libs/libs_olist.zip
