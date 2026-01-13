@@ -1,4 +1,4 @@
-#test
+
 # Nome do arquivo: customer_processor.py
 import pandas as pd
 import logging
@@ -29,48 +29,3 @@ def validate_customers_and_get_clean_data(customers_df):
 
     return cleaned_customers_df
 
-def run_etl_process(spark_session, input_path, output_path):
-    # Verifica se o input_path termina com barra, se não, adiciona
-    if not input_path.endswith('/'):
-        input_path += '/'
-        
-    specific_file_path = f"{input_path}olist_customers_dataset.csv"
-    
-    logger.info(f"Iniciando processamento. Lendo arquivo especifico: {specific_file_path}")
-    
-    try:
-        # 1. Ler CSV
-        df_spark_input = spark_session.read.option("header", "true") \
-                                           .option("inferSchema", "true") \
-                                           .csv(specific_file_path)
-        logger.info("Leitura do S3 (Spark) concluida.")
-
-        # 2. Converter para Pandas
-        df_pandas_input = df_spark_input.toPandas()
-        logger.info(f"Conversao para Pandas concluida. Total linhas: {len(df_pandas_input)}")
-
-        # 3. Aplicar validação
-        df_pandas_clean = validate_customers_and_get_clean_data(df_pandas_input)
-        logger.info("Regras de validacao aplicadas.")
-
-        # 4. Salvar resultado (USANDO PANDAS DIRETO)
-        if not df_pandas_clean.empty:
-            
-            # Garante que o output_path não termine com barra para montarmos o nome do arquivo
-            base_output_path = output_path.rstrip('/')
-            
-            # Monta o caminho completo com o nome exato do arquivo desejado
-            final_file_path = f"{base_output_path}/olist_customer_dataset.parquet"
-            
-            logger.info(f"Salvando arquivo unico via Pandas em: {final_file_path}")
-            
-            # Salva direto. Como já instalamos 's3fs' e 'pyarrow', isso funciona nativamente no S3
-            df_pandas_clean.to_parquet(final_file_path, index=False)
-            
-            logger.info("Sucesso! Arquivo salvo.")
-        else:
-            logger.warning("O DataFrame resultante esta vazio. Nada foi gravado.")
-            
-    except Exception as e:
-        logger.error(f"Erro durante o processamento ETL: {str(e)}")
-        raise e
