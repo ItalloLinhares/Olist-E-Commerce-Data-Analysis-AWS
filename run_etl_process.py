@@ -48,10 +48,10 @@ def run_etl_process(spark_session, input_path, output_path):
     },
     "olist_products_dataset.csv": {
         "function": validate_products.validate_products,
-        "output_name": "olist_sellers_dataset.parquet"
+        "output_name": "olist_products_dataset.parquet"
     },
     }
-    
+
     # Verifica se o input_path termina com barra, se não, adiciona
     if not input_path.endswith('/'): input_path += '/'
     if not output_path.endswith('/'): output_path += '/'
