@@ -5,13 +5,29 @@ from urllib.parse import urlparse
 import sys
 import validations
 import validate_customers
-
+import validate_orders
+import validate_sellers
+import validate_products
 
 FILE_PROCESSOR_MAP = {
     "olist_customers_dataset.csv": {
         "function": validate_customers.validate_customers_and_get_clean_data,
         "output_name": "olist_customers_dataset.parquet"
-    }}
+    },
+    "olist_orders_dataset.csv": {
+        "function": validate_orders.validate_orders,
+        "output_name": "olist_orders_dataset.parquet"
+    },
+    "olist_sellers_dataset.csv": {
+        "function": validate_sellers.validate_sellers,
+        "output_name": "olist_sellers_dataset.parquet"
+    },
+    "olist_products_dataset.csv": {
+        "function": validate_products.validate_products,
+        "output_name": "olist_sellers_dataset.parquet"
+    },
+    }
+
 
 logger = logging.getLogger(__name__)
 

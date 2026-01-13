@@ -1,8 +1,8 @@
 
-# Nome do arquivo: customer_processor.py
 import pandas as pd
 import logging
 import validations
+import clean_df as clean_df
 
 # Cria uma instância do logger para este módulo
 logger = logging.getLogger(__name__)
@@ -19,13 +19,7 @@ def validate_customers_and_get_clean_data(customers_df):
     df_registros_invalidos_customers_combinado = pd.concat(lista_registros_invalidos_customers, ignore_index=True)
     dataframe_registros_customers_invalidos = df_registros_invalidos_customers_combinado.drop_duplicates()
     
-    logger.info(f"Encontrados {len(dataframe_registros_customers_invalidos)} clientes invalidos.")
+    cleaned_df = clean_df.clean_df(customers_df, dataframe_registros_customers_invalidos, 'customer_unique_id')
+    return cleaned_df
 
-    if not dataframe_registros_customers_invalidos.empty:
-        invalid_unique_ids = dataframe_registros_customers_invalidos['customer_unique_id'].unique()
-        cleaned_customers_df = customers_df[~customers_df['customer_unique_id'].isin(invalid_unique_ids)]
-    else:
-        cleaned_customers_df = customers_df
-
-    return cleaned_customers_df
 
