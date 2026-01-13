@@ -9,26 +9,6 @@ import validate_orders
 import validate_sellers
 import validate_products
 
-FILE_PROCESSOR_MAP = {
-    "olist_customers_dataset.csv": {
-        "function": validate_customers.validate_customers_and_get_clean_data,
-        "output_name": "olist_customers_dataset.parquet"
-    },
-    "olist_orders_dataset.csv": {
-        "function": validate_orders.validate_orders,
-        "output_name": "olist_orders_dataset.parquet"
-    },
-    "olist_sellers_dataset.csv": {
-        "function": validate_sellers.validate_sellers,
-        "output_name": "olist_sellers_dataset.parquet"
-    },
-    "olist_products_dataset.csv": {
-        "function": validate_products.validate_products,
-        "output_name": "olist_sellers_dataset.parquet"
-    },
-    }
-
-
 logger = logging.getLogger(__name__)
 
 def list_s3_files(s3_path):
@@ -52,6 +32,26 @@ def list_s3_files(s3_path):
     return files
 
 def run_etl_process(spark_session, input_path, output_path):
+
+    FILE_PROCESSOR_MAP = {
+    "olist_customers_dataset.csv": {
+        "function": validate_customers.validate_customers_and_get_clean_data,
+        "output_name": "olist_customers_dataset.parquet"
+    },
+    "olist_orders_dataset.csv": {
+        "function": validate_orders.validate_orders,
+        "output_name": "olist_orders_dataset.parquet"
+    },
+    "olist_sellers_dataset.csv": {
+        "function": validate_sellers.validate_sellers,
+        "output_name": "olist_sellers_dataset.parquet"
+    },
+    "olist_products_dataset.csv": {
+        "function": validate_products.validate_products,
+        "output_name": "olist_sellers_dataset.parquet"
+    },
+    }
+    
     # Verifica se o input_path termina com barra, se não, adiciona
     if not input_path.endswith('/'): input_path += '/'
     if not output_path.endswith('/'): output_path += '/'
