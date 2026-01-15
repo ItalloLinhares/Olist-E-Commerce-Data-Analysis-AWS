@@ -36,19 +36,23 @@ def run_etl_process(spark_session, input_path, output_path):
     FILE_PROCESSOR_MAP = {
     "olist_customers_dataset.csv": {
         "function": validate_customers.validate_customers_and_get_clean_data,
-        "output_name": "olist_customers_dataset.parquet"
+        "output_name": "olist_customers_dataset.parquet",
+        "output_folder": "customers_dataset/"
     },
     "olist_orders_dataset.csv": {
         "function": validate_orders.validate_orders,
-        "output_name": "olist_orders_dataset.parquet"
+        "output_name": "olist_orders_dataset.parquet",
+        "output_folder": "orders_dataset/"
     },
     "olist_sellers_dataset.csv": {
         "function": validate_sellers.validate_sellers,
-        "output_name": "olist_sellers_dataset.parquet"
+        "output_name": "olist_sellers_dataset.parquet",
+        "output_folder": "sellers_dataset/"
     },
     "olist_products_dataset.csv": {
         "function": validate_products.validate_products,
-        "output_name": "olist_products_dataset.parquet"
+        "output_name": "olist_products_dataset.parquet",
+        "output_name": "products_dataset/"
     },
     }
 
@@ -69,16 +73,15 @@ def run_etl_process(spark_session, input_path, output_path):
             if file_name in FILE_PROCESSOR_MAP:
                 config = FILE_PROCESSOR_MAP[file_name]
                 processor_function = config["function"]
-                final_output_name = config["output_name"]
+                final_output_path = f'{output_path}{config["output_folder"]}{config["output_name"]}' 
 
                 df_spark = spark_session.read.option("header", "true").option("inferSchema", "true").csv(file_uri)
                 df_pandas = df_spark.toPandas()
                 df_clean = processor_function(df_pandas)
 
                 if not df_clean.empty:
-                    final_path = f"{output_path}{final_output_name}"
-                    logger.info(f"Salvando resultado em: {final_path}")
-                    df_clean.to_parquet(path=final_path, engine='pyarrow', compression='snappy', index=False, flavor='spark')
+                    logger.info(f"Salvando resultado em: {final_output_path}")
+                    df_clean.to_parquet(path=final_output_path, engine='pyarrow', compression='snappy', index=False, flavor='spark')
                 else:
                     logger.warning(f"Arquivo '{file_name}' ignorado pois não está no mapa de processamento.")
         except Exception as e:
