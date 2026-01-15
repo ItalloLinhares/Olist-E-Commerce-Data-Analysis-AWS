@@ -78,7 +78,7 @@ def run_etl_process(spark_session, input_path, output_path):
                 if not df_clean.empty:
                     final_path = f"{output_path}{final_output_name}"
                     logger.info(f"Salvando resultado em: {final_path}")
-                    df_clean.df.to_parquet(path=final_path, engine='pyarrow', compression='snappy', index=False, flavor='spark')
+                    df_clean.to_parquet(path=final_path, engine='pyarrow', compression='snappy', index=False, flavor='spark')
                 else:
                     logger.warning(f"Arquivo '{file_name}' ignorado pois não está no mapa de processamento.")
         except Exception as e:
