@@ -52,7 +52,7 @@ def run_etl_process(spark_session, input_path, output_path):
     "olist_products_dataset.csv": {
         "function": validate_products.validate_products,
         "output_name": "olist_products_dataset.parquet",
-        "output_name": "products_dataset/"
+        "output_folder": "products_dataset/"
     },
     }
 
