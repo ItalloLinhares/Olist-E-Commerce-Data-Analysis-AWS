@@ -14,7 +14,7 @@ def validate_sellers(sellers):
     #Verifica se a coluna seller_id é válida
     registros_invalidos_sellers['seller_id'] = validations.validar_formato_id_alfanumerico_32(sellers, 'seller_id')
     #Verifica se a coluna seller_city é válida
-    #registros_invalidos_sellers['seller_city'] = validations.validar_formato_cidade(sellers, 'seller_city')
+    registros_invalidos_sellers['seller_city'] = validations.validar_formato_cidade(sellers, 'seller_city')
     #Verifica se a coluna seller_state é válida
     #registros_invalidos_sellers['seller_state'] = validations.validar_formato_uf(sellers, 'seller_state')
 

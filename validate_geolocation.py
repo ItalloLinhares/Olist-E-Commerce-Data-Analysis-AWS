@@ -23,4 +23,4 @@ def validate_geolocation(geolocation):
 
 
     cleaned_df = clean_df.clean_df(geolocation, dataframe_registros_geolocation_invalidos, 'geolocation_seq_id')
-    return clean_df
+    return cleaned_df
