@@ -6,6 +6,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 def validate_sellers(sellers):
+
+    logger.info("--- VERSÃO NOVA CARREGADA ---")
+    
     #Cria um dicionario para guardar todas os registros inválidos de cada coluna
     registros_invalidos_sellers = {column: pd.DataFrame() for column in sellers.columns}
     #Verifica se a coluna seller_id é válida
@@ -15,5 +18,9 @@ def validate_sellers(sellers):
     #Verifica se a coluna seller_state é válida
     registros_invalidos_sellers['seller_state'] = validations.validar_formato_uf(sellers, 'seller_state')
 
-    cleaned_df = clean_df.clean_df(sellers, registros_invalidos_sellers, 'seller_id')
+    lista_registros_invalidos_sellers = list(registros_invalidos_sellers.values())
+    df_registros_invalidos_customers_combinado = pd.concat(lista_registros_invalidos_sellers, ignore_index=True)
+    dataframe_registros_sellers_invalidos = df_registros_invalidos_customers_combinado.drop_duplicates()
+
+    cleaned_df = clean_df.clean_df(sellers, dataframe_registros_sellers_invalidos, 'seller_id')
     return cleaned_df
