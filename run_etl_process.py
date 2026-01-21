@@ -48,11 +48,11 @@ def run_etl_process(spark_session, input_path, output_path):
         "output_name": "olist_orders_dataset.parquet",
         "output_folder": "orders_dataset/"
     },
-    "olist_sellers_dataset.csv": {
-        "function": validate_sellers.validate_sellers,
-        "output_name": "olist_sellers_dataset.parquet",
-        "output_folder": "sellers_dataset/"
-    },
+    #"olist_sellers_dataset.csv": {
+    #    "function": validate_sellers.validate_sellers,
+    #    "output_name": "olist_sellers_dataset.parquet",
+    #    "output_folder": "sellers_dataset/"
+    #},
     "olist_products_dataset.csv": {
         "function": validate_products.validate_products,
         "output_name": "olist_products_dataset.parquet",
