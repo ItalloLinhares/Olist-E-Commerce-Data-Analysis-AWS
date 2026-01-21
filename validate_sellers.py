@@ -7,8 +7,8 @@ logger = logging.getLogger(__name__)
 
 def validate_sellers(sellers):
 
-    logger.info("--- VERSÃO NOVA CARREGADA ---")
-    
+    sellers['seq_id'] = sellers.index + 1
+
     #Cria um dicionario para guardar todas os registros inválidos de cada coluna
     registros_invalidos_sellers = {column: pd.DataFrame() for column in sellers.columns}
     #Verifica se a coluna seller_id é válida

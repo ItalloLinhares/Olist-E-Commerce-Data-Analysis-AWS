@@ -3,7 +3,11 @@ import clean_df as clean_df
 import pandas as pd
 import logging
 
+logger = logging.getLogger(__name__)
+
 def validate_orders(orders):
+    orders['order_seq_id'] = orders.index + 1
+
     #Cria um dicionario para guardar todas os registros inválidos de cada coluna
     registros_invalidos_orders = {coluna: pd.DataFrame() for coluna in orders.columns}
     #Verifica se a coluna order_id é válida
@@ -27,6 +31,6 @@ def validate_orders(orders):
     df_registros_invalidos_orders_combinado = pd.concat(lista_registros_invalidos_orders, ignore_index=True)
     dataframe_registros_orders_invalidos = df_registros_invalidos_orders_combinado.drop_duplicates(subset=['order_id'], keep='first')
     
-    cleaned_df = clean_df.clean_df(orders, dataframe_registros_orders_invalidos, 'order_id')
+    cleaned_df = clean_df.clean_df(orders, dataframe_registros_orders_invalidos, 'order_seq_id')
 
     return cleaned_df

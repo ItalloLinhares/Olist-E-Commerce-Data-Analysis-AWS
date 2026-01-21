@@ -3,7 +3,12 @@ import validations as validations
 import clean_df as clean_df
 import logging
 
+logger = logging.getLogger(__name__)
 def validate_products(products):
+
+    products['product_seq_id'] = products.index + 1
+
+    
     #Cria um dicionario para guardar todas os registros inválidos de cada coluna
     registros_invalidos_products = {column: pd.DataFrame() for column in products.columns}
     #Verifica se a coluna order_id é válida
@@ -29,7 +34,7 @@ def validate_products(products):
     df_registros_invalidos_customers_combinado = pd.concat(lista_registros_invalidos_products, ignore_index=True)
     dataframe_registros_products_invalidos = df_registros_invalidos_customers_combinado.drop_duplicates()
 
-    cleaned_df = clean_df.clean_df(products, dataframe_registros_products_invalidos, 'product_id')
+    cleaned_df = clean_df.clean_df(products, dataframe_registros_products_invalidos, 'product_seq_id')
     return cleaned_df
     
 

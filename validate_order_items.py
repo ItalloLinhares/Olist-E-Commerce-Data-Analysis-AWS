@@ -7,6 +7,8 @@ logger = logging.getLogger(__name__)
 
 def validate_order_items(order_items):
 
+    order_items['seq_id'] = order_items.index + 1
+    
     #Cria um dicionario para guardar todas os registros inválidos de cada coluna
     registros_invalidos_order_items = {column: pd.DataFrame() for column in order_items.columns}
     #Verifica se a coluna order_id é válida
@@ -21,10 +23,11 @@ def validate_order_items(order_items):
     registros_invalidos_order_items['price'] = validations.validar_formato_monetario(order_items, 'price')
     #Verifica se a coluna freight_value é válida
     registros_invalidos_order_items['freight_value'] = validations.validar_formato_monetario(order_items, 'freight_value')
+    
     lista_registros_invalidos_order_items = list(registros_invalidos_order_items.values())
     df_registros_invalidos_order_items_combinado = pd.concat(lista_registros_invalidos_order_items, ignore_index=True)
     dataframe_registros_order_items_invalidos = df_registros_invalidos_order_items_combinado.drop_duplicates(subset=['order_id'], keep='first')
     
-
-    cleaned_df = clean_df.clean_df(order_items, dataframe_registros_order_items_invalidos, 'order_id')
+    
+    cleaned_df = clean_df.clean_df(order_items, dataframe_registros_order_items_invalidos, 'seq_id')
     return cleaned_df

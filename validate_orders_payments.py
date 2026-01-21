@@ -6,6 +6,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 def validate_orders_payments(orders_payments):
+
+    orders_payments['seq_id'] = orders_payments.index + 1
+
     #Cria um dicionario para guardar todas os registros inválidos de cada coluna
     registros_invalidos_orders_payments = {column: pd.DataFrame() for column in orders_payments.columns}
     #Verifica se a coluna order_id é válida
