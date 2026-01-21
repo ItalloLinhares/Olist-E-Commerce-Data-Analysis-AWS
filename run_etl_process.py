@@ -8,6 +8,10 @@ import validate_customers
 import validate_orders
 import validate_sellers
 import validate_products
+import validate_order_items
+import validate_orders_reviews
+import validate_orders_payments
+import validate_geolocation
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +58,26 @@ def run_etl_process(spark_session, input_path, output_path):
         "output_name": "olist_products_dataset.parquet",
         "output_folder": "products_dataset/"
     },
+    "olist_order_items_dataset.csv": {
+        "function": validate_order_items.validate_order_items,
+        "output_name": "olist_order_items_dataset.parquet",
+        "output_folder": "order_items_dataset/"
+    },
+    "olist_order_reviews_dataset.csv": {
+        "function": validate_orders_reviews.validate_orders_reviews,
+        "output_name": "olist_orders_reviews_dataset.parquet",
+        "output_folder": "orders_reviews_dataset/"
+    },
+    "olist_order_payments_dataset.csv": {
+        "function": validate_orders_payments.validate_orders_payments,
+        "output_name": "olist_order_payments_dataset.parquet",
+        "output_folder": "order_payments_dataset/"
+    },
+    "olist_geolocation_dataset.csv": {
+        "function": validate_geolocation.validate_geolocation,
+        "output_name": "olist_geolocation_dataset.parquet",
+        "output_folder": "order_geolocation_dataset/"
+    }
     }
 
     # Verifica se o input_path termina com barra, se não, adiciona
