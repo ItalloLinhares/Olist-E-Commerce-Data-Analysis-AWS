@@ -1,6 +1,6 @@
 import pandas as pd
 import validations as validations
-import clean_df
+import clean_df as clean_df
 
 def validate_geolocation(geolocation):
 
@@ -21,5 +21,6 @@ def validate_geolocation(geolocation):
     df_registros_invalidos_geolocation_combinado = pd.concat(lista_registros_invalidos_geolocation, ignore_index=True)
     dataframe_registros_geolocation_invalidos = df_registros_invalidos_geolocation_combinado.drop_duplicates(subset=['geolocation_seq_id'], keep='first')
 
-    clean_df = clean_df.clean_df(geolocation, dataframe_registros_geolocation_invalidos, 'geolocation_seq_id')
+
+    cleaned_df = clean_df.clean_df(geolocation, dataframe_registros_geolocation_invalidos, 'geolocation_seq_id')
     return clean_df
