@@ -19,7 +19,7 @@ def validate_geolocation(geolocation):
     
     lista_registros_invalidos_geolocation = list(registros_invalidos_geolocation.values())
     df_registros_invalidos_geolocation_combinado = pd.concat(lista_registros_invalidos_geolocation, ignore_index=True)
-    dataframe_registros_geolocation_invalidos = df_registros_invalidos_geolocation_combinado.drop_duplicates(subset=['geolocation_zip_code_prefix'], keep='first')
-    
+    dataframe_registros_geolocation_invalidos = df_registros_invalidos_geolocation_combinado.drop_duplicates(subset=['geolocation_seq_id'], keep='first')
+
     clean_df = clean_df.clean_df(geolocation, dataframe_registros_geolocation_invalidos, 'geolocation_seq_id')
     return clean_df
