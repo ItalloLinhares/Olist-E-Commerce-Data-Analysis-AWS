@@ -4,8 +4,8 @@ import boto3
 from urllib.parse import urlparse
 import sys
 import validations
-import validate_customers
-import validate_orders
+import validations.validate_customers as validate_customers
+import validations.validate_orders as validate_orders
 import validate_sellers
 import validate_products
 import validate_order_items
