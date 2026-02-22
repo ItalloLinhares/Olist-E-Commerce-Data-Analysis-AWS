@@ -1,2 +1,15 @@
+chispa==0.11.1
+colorama==0.4.6
+coverage==7.13.4
+findspark==2.0.1
+iniconfig==2.3.0
+packaging==26.0
+pluggy==1.6.0
+prettytable==3.17.0
+Pygments==2.19.2
+pytest==9.0.2
+pytest-cov==7.0.0
+pytest-spark==0.8.0
 python-json-logger==4.0.0
 structlog==25.5.0
+wcwidth==0.6.0

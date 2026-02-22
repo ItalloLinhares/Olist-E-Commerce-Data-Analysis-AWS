@@ -10,7 +10,7 @@ import clean_df as clean_df
 # Logger configuration
 logger = logging.getLogger(__name__)
 
-def validate_orders(orders_df: DataFrame) -> DataFrame:
+def validate_customers_and_get_clean_data(orders_df: DataFrame) -> DataFrame:
     """
     Validates the orders DataFrame and returns a cleaned version.
     """
