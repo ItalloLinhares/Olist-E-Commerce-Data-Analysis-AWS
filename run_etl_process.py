@@ -3,16 +3,12 @@ import logging
 import boto3
 from urllib.parse import urlparse
 import sys
-import validations
-import validations.validate_customers as validate_customers
-import validations.validate_orders as validate_orders
-import validate_sellers
-import validate_products
-import validate_order_items
-import validate_orders_reviews
-import validate_orders_payments
-import validate_geolocation
 import time
+
+# Importações de configuração centralizada
+from config import Config, FUNCTION_REGISTRY
+
+from pyspark.sql import SparkSession
 from utils.logger import setup_logging
 from utils.s3_helpers import get_file_size, list_s3_files, list_files_with_metadata
 from src.utils.exceptions import (
@@ -25,57 +21,6 @@ from src.utils.exceptions import (
 )
 
 logger = setup_logging()
-
-FILE_PROCESSOR_MAP = {
-"olist_customers_dataset.csv": {
-    "function": validate_customers.validate_customers_and_get_clean_data,
-    "output_name": "olist_customers_dataset.parquet",
-    "output_folder": "customers_dataset/",
-    "quality_threshold": 95.0 
-},
-"olist_orders_dataset.csv": {
-    "function": validate_orders.validate_orders,
-    "output_name": "olist_orders_dataset.parquet",
-    "output_folder": "orders_dataset/",
-    "quality_threshold": 95.0 
-},
-#"olist_sellers_dataset.csv": {
-#    "function": validate_sellers.validate_sellers,
-#    "output_name": "olist_sellers_dataset.parquet",
-#    "output_folder": "sellers_dataset/"
-#    "quality_threshold": 95.0 
-#},
-"olist_products_dataset.csv": {
-    "function": validate_products.validate_products,
-    "output_name": "olist_products_dataset.parquet",
-    "output_folder": "products_dataset/",
-    "quality_threshold": 95.0 
-},
-"olist_order_items_dataset.csv": {
-    "function": validate_order_items.validate_order_items,
-    "output_name": "olist_order_items_dataset.parquet",
-    "output_folder": "order_items_dataset/",
-    "quality_threshold": 95.0 
-},
-"olist_order_reviews_dataset.csv": {
-    "function": validate_orders_reviews.validate_orders_reviews,
-    "output_name": "olist_orders_reviews_dataset.parquet",
-    "output_folder": "orders_reviews_dataset/",
-    "quality_threshold": 95.0 
-},
-"olist_order_payments_dataset.csv": {
-    "function": validate_orders_payments.validate_orders_payments,
-    "output_name": "olist_order_payments_dataset.parquet",
-    "output_folder": "order_payments_dataset/",
-    "quality_threshold": 95.0 
-},
-"olist_geolocation_dataset.csv": {
-    "function": validate_geolocation.validate_geolocation,
-    "output_name": "olist_geolocation_dataset.parquet",
-    "output_folder": "order_geolocation_dataset/",
-    "quality_threshold": 95.0 
-}
-}
 
 def validate_configuration(input_path: str, output_path: str) -> None:
     """
@@ -161,7 +106,7 @@ def run_etl_process(
     spark_session: SparkSession,
     input_path: str,
     output_path: str
-) -> Dict:
+) -> dict:
     """
     Execute complete ETL process using PySpark
     
@@ -245,16 +190,27 @@ def run_etl_process(
             )
             
             try:
-                # Check if file is in processor map
-                if file_name not in FILE_PROCESSOR_MAP:
-                    logger.warning("file_not_in_processor_map", file_name=file_name)
+                # 1. Check if file is in the Configuration Map
+                if file_name not in Config.FILE_PROCESSOR_MAP:
+                    logger.warning("file_not_in_config_map", file_name=file_name)
                     continue
                 
-                config = FILE_PROCESSOR_MAP[file_name]
-                processor_function = config["function"]
-                final_output_path = f'{output_path}{config["output_folder"]}{config["output_name"]}'
-                quality_threshold = config.get("quality_threshold", 95.0)
+                # 2. Check if file has a registered function
+                if file_name not in FUNCTION_REGISTRY:
+                    logger.error("function_not_registered_for_file", file_name=file_name)
+                    continue
+
+                # Get configuration and function from centralized config
+                file_config = Config.FILE_PROCESSOR_MAP[file_name]
+                processor_function = FUNCTION_REGISTRY[file_name]
                 
+                output_folder = file_config.get("output_folder", "")
+                output_name = file_config.get("output_name", file_name.replace('.csv', '.parquet'))
+                final_output_path = f'{output_path}{output_folder}{output_name}'
+                
+                quality_threshold = file_config.get("quality_threshold", Config.MIN_VALID_PERCENTAGE)
+                partition_cols = file_config.get("partition_by")
+
                 # Read CSV with Spark
                 logger.info("reading_csv", file_name=file_name)
                 
@@ -270,7 +226,7 @@ def run_etl_process(
                         operation="read"
                     ) from e
                 
-                # Count rows BEFORE validation (using Spark action)
+                # Count rows BEFORE validation
                 try:
                     rows_input = df_spark.count()
                 except Exception as e:
@@ -293,6 +249,7 @@ def run_etl_process(
                 logger.info("applying_validations", file_name=file_name)
                 
                 try:
+                    # Execute the validation function retrieved from registry
                     df_clean = processor_function(df_spark)
                 except Exception as e:
                     raise DataValidationError(
@@ -300,7 +257,7 @@ def run_etl_process(
                         field_name="multiple"
                     ) from e
                 
-                # Count rows AFTER validation (using Spark action)
+                # Count rows AFTER validation
                 try:
                     rows_output = df_clean.count()
                 except Exception as e:
@@ -338,9 +295,13 @@ def run_etl_process(
                 logger.info("saving_parquet", file_name=file_name, output_path=final_output_path)
                 
                 try:
-                    df_clean.write \
-                        .mode("overwrite") \
-                        .parquet(final_output_path, compression="snappy")
+                    writer = df_clean.write.mode("overwrite")
+                    
+                    if partition_cols:
+                        writer = writer.partitionBy(partition_cols)
+                        
+                    writer.parquet(final_output_path, compression="snappy")
+                    
                 except Exception as e:
                     raise S3AccessError(
                         f"Failed to write Parquet to S3: {file_name}",
@@ -383,7 +344,6 @@ def run_etl_process(
                     'status': 'failed',
                     'error': f'S3 access error: {str(e)}'
                 })
-                # Re-raise S3 errors as they're likely systemic
                 raise
                 
             except DataValidationError as e:
@@ -400,7 +360,6 @@ def run_etl_process(
                     'status': 'failed',
                     'error': f'Validation error: {str(e)}'
                 })
-                # Continue processing other files
                 continue
                 
             except DataQualityError as e:
@@ -418,7 +377,6 @@ def run_etl_process(
                     'status': 'failed',
                     'error': f'Quality error: {str(e)}'
                 })
-                # Continue (quality issues logged but not fatal)
                 continue
                 
             except TransformationError as e:
@@ -451,7 +409,6 @@ def run_etl_process(
                     'status': 'failed',
                     'error': f'Unexpected error: {str(e)}'
                 })
-                # For unexpected errors, re-raise
                 raise ETLException(
                     f"Unexpected error processing file: {file_name}"
                 ) from e
@@ -464,11 +421,9 @@ def run_etl_process(
         return stats
         
     except ConfigurationError:
-        # Already logged, just re-raise
         raise
         
     except S3AccessError:
-        # Already logged, just re-raise
         raise
         
     except Exception as e:

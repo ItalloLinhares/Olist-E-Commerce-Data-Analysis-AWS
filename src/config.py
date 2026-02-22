@@ -16,14 +16,17 @@ Usage:
 
 import os
 from typing import Dict, List, Optional
-import validations.validate_customers, validations.validate_orders, validate_order_items
+import validations.validate_customers, validations.validate_orders, validations.validate_order_items, validations.validate_geolocation, validations.validate_orders_payments, validations.validate_orders_reviews, validations.validate_products, validations.validate_sellers
 
 FUNCTION_REGISTRY = {
-    "olist_customers_dataset.csv": validations.validate_customers
-    "olist_orders_dataset.csv": validations.validate_orders.validate_customers_and_get_clean_data
-    "olist_geolocation_dataset": null,
-    "olist_order_items_dataset": validate_order_items.validate_order_items
-
+    "olist_customers_dataset.csv": validations.validate_customers.validate_customers,
+    "olist_orders_dataset.csv": validations.validate_orders.validate_orders,
+    "olist_products_dataset.csv": validations.validate_products.validate_products,
+    "olist_sellers_dataset.csv": validations.validate_sellers.validate_sellers,
+    "olist_order_payments_dataset.csv": validations.validate_orders_payments.validate_orders_payments,
+    "olist_order_reviews_dataset.csv": validations.validate_orders_reviews.validate_orders_reviews,
+    "olist_order_items_dataset": validations.validate_order_items.validate_order_items,
+    "olist_geolocation_dataset": validations.validate_geolocation.validate_geolocation
 }
 
 

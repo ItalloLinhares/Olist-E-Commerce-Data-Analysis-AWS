@@ -8,7 +8,7 @@ import clean_data_module
 # Logger Configuration
 logger = logging.getLogger(__name__)
 
-def validate_customers_and_get_clean_data(customers_df: DataFrame) -> DataFrame:
+def validate_customers(customers_df: DataFrame) -> DataFrame:
     """
     Validates customer data and returns a clean DataFrame using PySpark.
     """
