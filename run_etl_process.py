@@ -1,5 +1,5 @@
 import pandas as pd
-import logging
+import structlog
 import boto3
 from urllib.parse import urlparse
 import sys
@@ -20,7 +20,9 @@ from src.utils.exceptions import (
     ConfigurationError
 )
 
-logger = setup_logging()
+setup_logging()
+
+logger = structlog.get_logger(__name__)
 
 def validate_configuration(input_path: str, output_path: str) -> None:
     """
@@ -160,7 +162,8 @@ def run_etl_process(
             raise S3AccessError(
                 "Failed to list files from S3",
                 bucket=input_path.split('/')[2],
-                operation="list"
+                operation="list",
+                log_message=e
             ) from e
         
         stats['total_files_found'] = len(all_files)
@@ -223,7 +226,8 @@ def run_etl_process(
                     raise S3AccessError(
                         f"Failed to read CSV from S3: {file_name}",
                         key=file_uri,
-                        operation="read"
+                        operation="read",
+                        message=str(e)
                     ) from e
                 
                 # Count rows BEFORE validation
@@ -254,7 +258,8 @@ def run_etl_process(
                 except Exception as e:
                     raise DataValidationError(
                         f"Validation function failed for {file_name}",
-                        field_name="multiple"
+                        field_name="multiple",
+                        error_message=str(e)
                     ) from e
                 
                 # Count rows AFTER validation
@@ -264,7 +269,8 @@ def run_etl_process(
                     raise TransformationError(
                         f"Failed to count rows in cleaned DataFrame: {file_name}",
                         transformation_type="count",
-                        dataframe_name=file_name
+                        dataframe_name=file_name,
+                        error_message=str(e)
                     ) from e
                 
                 rows_dropped = rows_input - rows_output
@@ -305,6 +311,7 @@ def run_etl_process(
                 except Exception as e:
                     raise S3AccessError(
                         f"Failed to write Parquet to S3: {file_name}",
+                        error=str(e),
                         key=final_output_path,
                         operation="write"
                     ) from e

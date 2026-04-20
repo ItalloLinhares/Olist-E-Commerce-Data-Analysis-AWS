@@ -2,7 +2,7 @@
 
 import pytest
 from pyspark.sql import functions as F
-from src.validations.validate_customers import validate_customers
+from src.utils_validations.validate_customers import validate_customers
 from chispa.dataframe_comparer import assert_df_equality
 
 

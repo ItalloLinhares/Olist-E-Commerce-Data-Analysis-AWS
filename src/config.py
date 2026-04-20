@@ -16,17 +16,18 @@ Usage:
 
 import os
 from typing import Dict, List, Optional
-import validations.validate_customers, validations.validate_orders, validations.validate_order_items, validations.validate_geolocation, validations.validate_orders_payments, validations.validate_orders_reviews, validations.validate_products, validations.validate_sellers
+from utils_validations import validate_customers, validate_orders, validate_order_items, validate_geolocation, validate_orders_payments, validate_orders_reviews, validate_products, validate_sellers
+
 
 FUNCTION_REGISTRY = {
-    "olist_customers_dataset.csv": validations.validate_customers.validate_customers,
-    "olist_orders_dataset.csv": validations.validate_orders.validate_orders,
-    "olist_products_dataset.csv": validations.validate_products.validate_products,
-    "olist_sellers_dataset.csv": validations.validate_sellers.validate_sellers,
-    "olist_order_payments_dataset.csv": validations.validate_orders_payments.validate_orders_payments,
-    "olist_order_reviews_dataset.csv": validations.validate_orders_reviews.validate_orders_reviews,
-    "olist_order_items_dataset": validations.validate_order_items.validate_order_items,
-    "olist_geolocation_dataset": validations.validate_geolocation.validate_geolocation
+    "olist_orders_dataset.csv": validate_orders.validate_orders,
+    "olist_products_dataset.csv": validate_products.validate_products,
+    "olist_sellers_dataset.csv": validate_sellers.validate_sellers,
+    "olist_order_payments_dataset.csv": validate_orders_payments.validate_orders_payments,
+    "olist_order_reviews_dataset.csv": validate_orders_reviews.validate_orders_reviews,
+    "olist_order_items_dataset.csv": validate_order_items.validate_order_items,
+    "olist_geolocation_dataset.csv": validate_geolocation.validate_geolocation,
+    "olist_customers_dataset.csv": validate_customers.validate_customers
 }
 
 
@@ -231,7 +232,7 @@ class Config:
             "output_name": "olist_orders_dataset.parquet",
             "output_folder": "orders_dataset/",
             "quality_threshold": 95.0,
-            "partition_by": ["year", "month"]  # Partition by order date
+            "partition_by": ["order_purchase_month_and_year"]  # Partition by order date
         },
         "olist_products_dataset.csv": {
             "output_name": "olist_products_dataset.parquet",

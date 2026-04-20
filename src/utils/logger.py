@@ -1,25 +1,33 @@
 import structlog
 import logging
-from pythonjsonlogger import jsonlogger
+import sys
+from structlog.processors import CallsiteParameterAdder, CallsiteParameter
 
-def setup_loggin(log_level="INFO"):
+def setup_logging(log_level="INFO"):
     """Configure the structured record for the project"""
-    logHandler = logging.StreamHandler()
-    formatter = jsonlogger.JsonFormatter(
-        '%(timestamp)s %(level)s %(name)s %(message)s'
-    )
-    logHandler.setFormatter(formatter)
-
-    logging.basicConfig(
-        level=getattr(logging, log_level),
-        handlers=[logHandler]
-    )
     
+    logging.basicConfig(
+        level=getattr(logging, log_level.upper()),
+        format="%(message)s", # Structlog envia a mensagem já formatada
+        stream=sys.stdout,
+    )
+
     structlog.configure(
         processors=[
+            # Filtra logs por nível antes de processar
             structlog.stdlib.filter_by_level,
+            # Adiciona metadados básicos
             structlog.stdlib.add_logger_name,
             structlog.stdlib.add_log_level,
+            # ESTE É O CARA: Extrai info de onde o log foi chamado
+            structlog.processors.CallsiteParameterAdder(
+                {
+                    CallsiteParameter.FILENAME,
+                    CallsiteParameter.FUNC_NAME,
+                    CallsiteParameter.LINENO,
+                    CallsiteParameter.MODULE,
+                }
+            ),
             structlog.stdlib.PositionalArgumentsFormatter(),
             structlog.processors.TimeStamper(fmt="iso"),
             structlog.processors.StackInfoRenderer(),
@@ -28,5 +36,8 @@ def setup_loggin(log_level="INFO"):
         ],
         context_class=dict,
         logger_factory=structlog.stdlib.LoggerFactory(),
-        cache_logger_on_first_use=True,
+        wrapper_class=structlog.stdlib.BoundLogger,
+        cache_logger_on_first_use=True
     )
+    
+    return structlog.get_logger()
