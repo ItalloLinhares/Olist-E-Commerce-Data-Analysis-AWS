@@ -3,9 +3,13 @@
 import boto3
 from urllib.parse import urlparse
 from typing import List, Dict, Tuple, Optional
-import logging
+import structlog
+from utils.logger import setup_logging
 
-logger = logging.getLogger(__name__)
+
+setup_logging()
+
+logger = structlog.get_logger(__name__)
 
 def list_s3_files(s3_path: str, extension: Optional[str] =None) -> List[str]:
     """
@@ -168,16 +172,13 @@ def list_files_with_metadata(
         file2.csv: 8.45 MB
     """
     bucket, prefix = parse_s3_path(s3_folder_path)
-    
     # Ensure prefix ends with /
+    logger.info("Checking Prefix")
     if prefix and not prefix.endswith('/'):
         prefix += '/'
-    
     s3_client = boto3.client('s3')
-    
     files = []
     continuation_token = None
-    
     # Handle pagination for large folders
     while True:
         if continuation_token:
@@ -188,17 +189,19 @@ def list_files_with_metadata(
             )
         else:
             response = s3_client.list_objects_v2(Bucket=bucket, Prefix=prefix)
-        
+            logger.info("Response:",
+                        response=response,
+                        bucket=bucket,
+                        prefix=prefix)
         if 'Contents' in response:
             for obj in response['Contents']:
                 key = obj['Key']
-                
+                logger.info("starting key:", log_key=key)
                 # Filter by extension and ignore folders
                 if key.endswith(extension) and not key.endswith('/'):
                     full_path = f"s3://{bucket}/{key}"
                     file_name = key.split('/')[-1]
                     size_bytes = obj['Size']
-                    
                     files.append({
                         'path': full_path,
                         'key': key,
@@ -210,13 +213,19 @@ def list_files_with_metadata(
                         'size_formatted': format_size(size_bytes),
                         'last_modified': obj['LastModified'].isoformat()
                     })
-        
+                    logger.info("ending key: ", log_file_key=key)
         # Check if there are more results
         if response.get('IsTruncated'):
             continuation_token = response.get('NextContinuationToken')
         else:
             break
-    
+    # Sort by name
+    logger.info(
+        "files_sorted",
+        total_files=len(files),
+        folder=s3_folder_path,
+        extension=extension
+    )
     # Sort by name
     files.sort(key=lambda x: x['name'])
     
